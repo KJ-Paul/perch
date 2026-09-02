@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#151a2d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Perch</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,50&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#151a2d; --night-2:#1d2340; --moon:#ece4cf; --moon-dim:#a9a394;
+  --rust:#b8683b; --moss:#6e8a5e; --bark:#5c4633; --slate:#3b4363;
+  --body:#c46f4a; --mind:#7f8fc4; --heart:#c48a9e;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--night);color:var(--moon);font-family:"Fraunces",Georgia,serif;font-optical-sizing:auto;-webkit-font-smoothing:antialiased}
+body{font-size:17px;line-height:1.5;padding:0 0 calc(80px + env(safe-area-inset-bottom))}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--rust);outline-offset:2px}
+main{max-width:520px;margin:0 auto;padding:0 18px}
+h1,h2,h3{font-weight:400;margin:0}
+h2{font-size:1.15rem;margin:30px 0 10px;color:var(--moon)}
+.sky{position:relative;margin:0 -18px;background:radial-gradient(120% 80% at 50% 100%,#232a4a 0%,var(--night) 70%)}
+.sky svg{display:block;width:100%;height:auto}
+.season{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0 0;font-size:.95rem;color:var(--moon-dim)}
+.season strong{color:var(--moon);font-weight:400}
+.attrs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px}
+.attr{padding:10px 12px;border-left:3px solid;background:var(--night-2);border-radius:0 8px 8px 0}
+.attr small{display:block;color:var(--moon-dim);font-size:.85rem}
+.attr b{font-weight:400;font-size:1.5rem;line-height:1.1}
+.attr.body{border-color:var(--body)} .attr.mind{border-color:var(--mind)} .attr.heart{border-color:var(--heart)}
+.boss{background:var(--night-2);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.boss .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.boss .row span{color:var(--moon-dim);font-size:.9rem}
+.hp{height:8px;background:#0e1122;border-radius:4px;margin-top:8px;overflow:hidden;position:relative}
+.hp i{display:block;height:100%;background:var(--rust);transition:width .5s ease}
+.hp::after{content:"";position:absolute;right:20%;top:0;bottom:0;width:1px;background:var(--moon-dim);opacity:.6}
+.boss .slay{margin-top:8px;font-size:.9rem;color:var(--moon-dim)}
+.boss button.win{margin-top:8px;padding:6px 12px;border:1px solid var(--rust);border-radius:6px;color:var(--moon)}
+.domains{list-style:none;margin:0;padding:0}
+.dom{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #262c48}
+.dom .lvl{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:1.05rem;border:2px solid;color:var(--moon)}
+.dom.body .lvl{border-color:var(--body)} .dom.mind .lvl{border-color:var(--mind)} .dom.heart .lvl{border-color:var(--heart)}
+.dom .name{display:flex;align-items:baseline;gap:8px}
+.dom .name em{font-style:normal;font-size:.8rem;color:var(--rust);border:1px solid var(--rust);border-radius:4px;padding:0 5px}
+.dom .name s{text-decoration:none;font-size:.8rem;color:var(--moon-dim)}
+.bar{height:5px;background:#0e1122;border-radius:3px;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--moss);transition:width .6s ease}
+.dom .sub{font-size:.85rem;color:var(--moon-dim);margin-top:2px}
+.dom button.log{padding:8px 12px;border:1px solid var(--slate);border-radius:8px;color:var(--moon)}
+.dom.pulse .lvl{animation:pulse .9s ease}
+@keyframes pulse{0%{transform:scale(1)}40%{transform:scale(1.35);box-shadow:0 0 0 10px rgba(184,104,59,.25)}100%{transform:scale(1)}}
+.card{background:var(--night-2);border-radius:10px;padding:14px}
+.card table{width:100%;border-collapse:collapse;font-size:.95rem}
+.card td{padding:4px 0;border-bottom:1px solid #262c48}
+.card td:last-child{text-align:right;color:var(--moon-dim)}
+.journal{list-style:none;padding:0;margin:0;font-size:.95rem}
+.journal li{padding:8px 0;border-bottom:1px solid #262c48}
+.journal small{color:var(--moon-dim);display:block}
+.settings{display:flex;flex-wrap:wrap;gap:8px}
+.settings button,.settings label{padding:8px 12px;border:1px solid var(--slate);border-radius:8px;font-size:.95rem}
+.settings label{cursor:pointer}
+.settings input[type=file]{display:none}
+.note{font-size:.9rem;color:var(--moon-dim)}
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));padding:14px 28px;background:var(--rust);color:#1a120c;border-radius:30px;font-size:1.05rem;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+dialog{border:0;border-radius:14px;background:var(--night-2);color:var(--moon);padding:20px;width:min(92vw,440px);font:inherit}
+dialog::backdrop{background:rgba(5,7,15,.7)}
+dialog h3{font-size:1.2rem;margin-bottom:12px}
+dialog label{display:block;margin:10px 0 4px;color:var(--moon-dim);font-size:.9rem}
+dialog select,dialog input,dialog textarea{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--slate);background:var(--night);color:var(--moon);font:inherit;font-size:1rem}
+dialog textarea{min-height:60px;resize:vertical}
+dialog .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+dialog .actions button{padding:9px 16px;border-radius:8px;border:1px solid var(--slate)}
+dialog .actions button.primary{background:var(--rust);border-color:var(--rust);color:#1a120c}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--moon);color:var(--night);padding:8px 16px;border-radius:8px;font-size:.95rem;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.on{opacity:1}
+/* owl animations */
+.owl .head{transform-origin:100px 78px;animation:swivel var(--swivel-dur,9s) ease-in-out infinite}
+@keyframes swivel{0%,100%{transform:rotate(0)}30%{transform:rotate(var(--swivel-amp,4deg))}70%{transform:rotate(calc(var(--swivel-amp,4deg)*-1))}}
+.owl .lid{transform-origin:center;animation:blink var(--blink-dur,4s) linear infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(0)}96%,98%{transform:scaleY(1)}}
+.owl .glow{animation:glow 3s ease-in-out infinite alternate}
+@keyframes glow{from{opacity:var(--glow-lo,0)}to{opacity:var(--glow-hi,0)}}
+@media (prefers-reduced-motion:reduce){.owl *{animation:none!important}.dom.pulse .lvl{animation:none}}
+</style>
+</head>
+<body>
+<main>
+  <div class="sky"><svg id="scene" viewBox="0 0 400 300" aria-label="Your owl in its tree"></svg></div>
+  <div class="season" id="seasonBar"></div>
+  <div class="attrs" id="attrs"></div>
+
+  <h2>Bosses this season</h2>
+  <div id="bosses"></div>
+
+  <h2>Branches</h2>
+  <ul class="domains" id="domains"></ul>
+
+  <h2>Last seven nights</h2>
+  <div class="card" id="week"></div>
+
+  <h2>Journal</h2>
+  <ul class="journal" id="journal"></ul>
+
+  <h2>Settings</h2>
+  <div class="settings">
+    <button id="syncChess">Sync chess.com</button>
+    <button id="editFocus">Change focus</button>
+    <button id="export">Export data</button>
+    <label>Import data<input type="file" id="import" accept="application/json"></label>
+  </div>
+  <p class="note" id="syncNote"></p>
+  <p class="note">Everything is stored on this device only. Export now and then.</p>
+</main>
+
+<button class="fab" id="fab">Log a session</button>
+<div class="toast" id="toast"></div>
+
+<dialog id="logDlg">
+  <h3>Log a session</h3>
+  <label for="dDomain">Branch</label>
+  <select id="dDomain"></select>
+  <label for="dType">What</label>
+  <select id="dType"></select>
+  <div id="minWrap"><label for="dMin">Minutes</label><input id="dMin" type="number" inputmode="numeric" min="1" max="600" value="45"></div>
+  <label for="dDate">Date</label><input id="dDate" type="date">
+  <label for="dNote">One line, optional</label><textarea id="dNote" placeholder="What happened, or what you noticed"></textarea>
+  <div class="actions"><button id="dCancel">Cancel</button><button class="primary" id="dSave">Save session</button></div>
+</dialog>
+
+<dialog id="msDlg">
+  <h3 id="msTitle">Log a milestone</h3>
+  <label for="msVal" id="msLabel"></label><input id="msVal" type="number" step="0.1" inputmode="decimal">
+  <label for="msNote">A line to remember it by</label><textarea id="msNote"></textarea>
+  <div class="actions"><button id="msCancel">Cancel</button><button class="primary" id="msSave">Record it</button></div>
+</dialog>
+
+<dialog id="focusDlg">
+  <h3>Focus branches</h3>
+  <p class="note">Two branches earn double this season. Changing mid-season is allowed but not encouraged.</p>
+  <label for="f1">First</label><select id="f1"></select>
+  <label for="f2">Second</label><select id="f2"></select>
+  <div class="actions"><button id="fCancel">Cancel</button><button class="primary" id="fSave">Set focus</button></div>
+</dialog>
+
+<script>
+// ---------- configuration ----------
+const DOMAINS = [
+  {id:'tennis',   name:'Tennis',        attr:'body', types:[
+    {id:'drill',label:'Drill / ball machine',rate:1.5},{id:'hit',label:'Hitting / practice match',rate:1},{id:'match',label:'Match play',rate:1}]},
+  {id:'jj',       name:'Jiu jitsu',     attr:'body', types:[
+    {id:'class',label:'Class / open mat',rate:1},{id:'comp',label:'Competition class',rate:1.25}]},
+  {id:'gym',      name:'Gym',           attr:'body', types:[{id:'session',label:'Session',rate:1}], spill:{tennis:.25,jj:.25,mobility:.25}},
+  {id:'mobility', name:'Mobility',      attr:'body', types:[{id:'session',label:'Stretch / yoga / mobility',rate:1}], spill:{tennis:.25,jj:.25}},
+  {id:'chess',    name:'Chess',         attr:'mind', types:[
+    {id:'study',label:'Study (tactics, analysis, openings)',rate:1},{id:'rapid',label:'Rapid / classical games',rate:.5},{id:'blitz',label:'Blitz / bullet',rate:.2,dailyCap:30}]},
+  {id:'piano',    name:'Piano',         attr:'mind', types:[{id:'practice',label:'Practice',rate:1},{id:'technique',label:'Technique / scales',rate:1.25}]},
+  {id:'creole',   name:'Haitian Creole',attr:'mind', types:[{id:'study',label:'Study',rate:1},{id:'talk',label:'Conversation',rate:2}]},
+  {id:'mind',     name:'Mindfulness',   attr:'mind', types:[{id:'meditate',label:'Meditation',rate:1},{id:'read',label:'Reading',rate:1},{id:'journal',label:'Journal entry',flat:10}]},
+  {id:'friends',  name:'Friendships',   attr:'heart',types:[
+    {id:'contact',label:'Reached out',flat:10},{id:'plan',label:'Plan kept',flat:30},{id:'new',label:'New activity together',flat:40},{id:'host',label:'Hosted',flat:60}]},
+  {id:'partner',  name:'Life partner',  attr:'heart',types:[{id:'time',label:'Time set aside',rate:1},{id:'date',label:'Planned date',flat:30}]},
+];
+const ATTRS = {body:'Body',mind:'Mind',heart:'Heart'};
+const SESSION_CAP_MIN = 120, DECAY_AFTER_DAYS = 14, DECAY_PER_DAY = .02;
+const SEASON = {start:'2026-09-01', end:'2026-11-23', focus:['tennis','chess']};
+const BOSSES = [
+  {id:'wtn', domain:'tennis', title:'WTN 26.5', sub:'Drains on tennis practice. Finish it by logging a WTN at or under 26.5.', drainXp:1500, drainTypes:null, milestoneLabel:'New WTN', check:v=>v<=26.5, better:'lower'},
+  {id:'r1300', domain:'chess', title:'Rapid 1300', sub:'Drains on study only, never on games. Finish it by logging a rapid rating of 1300 or more.', drainXp:800, drainTypes:['study'], milestoneLabel:'Rapid rating', check:v=>v>=1300, better:'higher'},
+];
+const CHESS_USER = 'axelkerb';
+const KEY = 'perch.v1';
+
+// ---------- state ----------
+const today = () => new Date().toISOString().slice(0,10);
+const days = (a,b) => Math.round((new Date(b)-new Date(a))/864e5);
+const fresh = () => ({
+  domains: Object.fromEntries(DOMAINS.map(d=>[d.id,{xp:0,lastActive:null,lastDecay:null,milestones:[]}])),
+  sessions:[], season:{...SEASON}, bosses:Object.fromEntries(BOSSES.map(b=>[b.id,{drained:0,slain:null}])),
+  chess:{lastSync:null,rapid:null,seen:[]},
+});
+let S;
+function load(){ try{ S = JSON.parse(localStorage.getItem(KEY)) || fresh(); }catch{ S = fresh(); } }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch{ toast('Could not save. Storage may be full or blocked.'); } }
+
+// ---------- levels ----------
+const need = L => Math.round(100*Math.pow(L-1,1.5)); // cumulative XP to be at level L
+function level(xp){ let L=1; while(need(L+1)<=xp) L++; return L; }
+function progress(xp){ const L=level(xp), a=need(L), b=need(L+1); return {L, within:xp-a, span:b-a, pct:(xp-a)/(b-a)}; }
+const dom = id => DOMAINS.find(d=>d.id===id);
+const isFocus = id => S.season.focus.includes(id);
+function attrLevel(attr){ const ds=DOMAINS.filter(d=>d.attr===attr); return ds.reduce((s,d)=>s+level(S.domains[d.id].xp),0)/ds.length; }
+
+// ---------- xp ----------
+function computeXp(domainId, typeId, minutes, date){
+  const d=dom(domainId), t=d.types.find(x=>x.id===typeId);
+  let xp = t.flat!=null ? t.flat : Math.min(minutes,SESSION_CAP_MIN)*t.rate;
+  if(t.dailyCap){ const used = S.sessions.filter(s=>s.domain===domainId&&s.type===typeId&&s.date===date).reduce((a,s)=>a+s.baseXp,0); xp=Math.max(0,Math.min(xp,t.dailyCap-used)); }
+  return xp;
+}
+function addSession({domainId,typeId,minutes,date,note,ext}){
+  const d=dom(domainId);
+  const base=computeXp(domainId,typeId,minutes,date);
+  const xp=Math.round(base*(isFocus(domainId)?2:1));
+  const before=level(S.domains[domainId].xp);
+  S.domains[domainId].xp+=xp;
+  const D=S.domains[domainId]; if(!D.lastActive||date>D.lastActive) D.lastActive=date; D.lastDecay=null;
+  S.sessions.push({id:Date.now()+Math.random().toString(16).slice(2),date,domain:domainId,type:typeId,minutes,baseXp:base,xp,note:note||'',ext:ext||null});
+  if(d.spill) for(const [k,f] of Object.entries(d.spill)){ S.domains[k].xp+=Math.round(base*f); }
+  for(const b of BOSSES) if(b.domain===domainId && !S.bosses[b.id].slain && (!b.drainTypes||b.drainTypes.includes(typeId))){
+    S.bosses[b.id].drained=Math.min(b.drainXp, S.bosses[b.id].drained+xp);
+  }
+  save();
+  return level(D.xp)>before;
+}
+
+// ---------- decay ----------
+function applyDecay(){
+  const t=today();
+  for(const d of DOMAINS){
+    const D=S.domains[d.id]; if(!D.lastActive) continue;
+    const idle=days(D.lastActive,t); if(idle<=DECAY_AFTER_DAYS) continue;
+    const from=D.lastDecay||D.lastActive; let n=days(from,t); if(D.lastDecay==null) n=idle-DECAY_AFTER_DAYS;
+    if(n<=0) continue;
+    const p=progress(D.xp); const keep=Math.pow(1-DECAY_PER_DAY,n);
+    D.xp=need(p.L)+Math.round(p.within*keep); D.lastDecay=t;
+  }
+  save();
+}
+
+// ---------- render ----------
+const $=s=>document.querySelector(s);
+function render(){ renderSeason(); renderScene(); renderAttrs(); renderBosses(); renderDomains(); renderWeek(); renderJournal(); }
+
+function renderSeason(){
+  const t=today(), total=days(S.season.start,S.season.end), done=Math.max(0,Math.min(total,days(S.season.start,t)));
+  const left=Math.max(0,total-done);
+  $('#seasonBar').innerHTML=`<span>Season 1 &nbsp;<strong>night ${done+1} of ${total}</strong></span><span>${left} nights to the full moon</span>`;
+}
+function renderAttrs(){
+  $('#attrs').innerHTML=Object.entries(ATTRS).map(([k,n])=>`<div class="attr ${k}"><small>${n}</small><b>${attrLevel(k).toFixed(1)}</b></div>`).join('');
+}
+function renderBosses(){
+  $('#bosses').innerHTML=BOSSES.map(b=>{
+    const st=S.bosses[b.id]; const drainPct=Math.min(80, 80*st.drained/b.drainXp);
+    const hp=st.slain?0:100-drainPct;
+    return `<div class="boss"><div class="row"><div>${b.title}</div><span>${st.slain?'Slain '+st.slain:hp.toFixed(0)+'% remaining'}</span></div>
+      <div class="hp"><i style="width:${hp}%"></i></div>
+      <div class="slay">${st.slain?'Done. A new boss arrives next season.':b.sub}</div>
+      ${st.slain?'':`<button class="win" data-boss="${b.id}">Log ${b.milestoneLabel.toLowerCase()}</button>`}</div>`;
+  }).join('');
+  document.querySelectorAll('[data-boss]').forEach(btn=>btn.onclick=()=>openMilestone(btn.dataset.boss));
+}
+function renderDomains(){
+  $('#domains').innerHTML=DOMAINS.map(d=>{
+    const D=S.domains[d.id], p=progress(D.xp); const idle=D.lastActive?days(D.lastActive,today()):null;
+    const sub = D.lastActive ? (idle>DECAY_AFTER_DAYS?`Fading, ${idle} nights untouched`: idle===0?'Fed tonight':`${idle} night${idle===1?'':'s'} ago`) : 'Not yet started';
+    return `<li class="dom ${d.attr}" id="dom-${d.id}"><div class="lvl">${p.L}</div>
+      <div><div class="name">${d.name}${isFocus(d.id)?'<em>focus</em>':''}<s>${Math.round(p.within)} / ${p.span}</s></div>
+      <div class="bar"><i style="width:${(p.pct*100).toFixed(1)}%"></i></div><div class="sub">${sub}</div></div>
+      <button class="log" data-log="${d.id}">Log</button></li>`;
+  }).join('');
+  document.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>openLog(b.dataset.log));
+}
+function renderWeek(){
+  const t=today(); const rows=DOMAINS.map(d=>{
+    const xp=S.sessions.filter(s=>s.domain===d.id&&days(s.date,t)<7).reduce((a,s)=>a+s.xp,0); return [d.name,xp];
+  }).filter(r=>r[1]>0).sort((a,b)=>b[1]-a[1]);
+  const chessGames=S.sessions.filter(s=>s.domain==='chess'&&days(s.date,t)<7);
+  const played=chessGames.filter(s=>s.type!=='study').reduce((a,s)=>a+s.minutes,0), studied=chessGames.filter(s=>s.type==='study').reduce((a,s)=>a+s.minutes,0);
+  $('#week').innerHTML = rows.length ? `<table>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]} xp</td></tr>`).join('')}</table>`
+    + (played||studied?`<p class="note" style="margin:10px 0 0">Chess: ${Math.round(played/60*10)/10} h played, ${Math.round(studied/60*10)/10} h studied.</p>`:'')
+    : '<p class="note" style="margin:0">Nothing logged yet this week. The owl is waiting.</p>';
+}
+function renderJournal(){
+  const items=[...S.sessions.filter(s=>s.note), ...DOMAINS.flatMap(d=>S.domains[d.id].milestones.map(m=>({date:m.date,domain:d.id,note:m.note,ms:m.label})))]
+    .sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12);
+  $('#journal').innerHTML = items.length ? items.map(i=>`<li>${i.ms?`<strong style="font-weight:400;color:var(--rust)">${i.ms}</strong> `:''}${i.note}<small>${dom(i.domain).name}, ${i.date}</small></li>`).join('')
+    : '<li class="note">Notes you add to sessions and milestones collect here.</li>';
+}
+
+// ---------- scene: tree + owl ----------
+function renderScene(){
+  const L=id=>level(S.domains[id].xp); const total=DOMAINS.reduce((s,d)=>s+L(d.id),0);
+  const t=today(); const freshness=id=>{const la=S.domains[id].lastActive; if(!la) return 0; const i=days(la,t); return i<=DECAY_AFTER_DAYS?1:Math.max(0,1-(i-DECAY_AFTER_DAYS)/30);};
+  const seasonPct=Math.max(0,Math.min(1,days(S.season.start,t)/days(S.season.start,S.season.end)));
+  // moon: waxing toward full at season end
+  const r=22, k=1-2*seasonPct; // -1 full .. 1 new (start dark)
+  const moon=`<g transform="translate(330,52)"><circle r="${r}" fill="#0f1224" stroke="#2a3050"/><path d="M0,-${r} A${r},${r} 0 1,1 0,${r} A${(r*Math.abs(k)).toFixed(1)},${r} 0 1,${k<0?1:0} 0,-${r}Z" fill="var(--moon)" opacity=".9"/></g>`;
+  const stars=Array.from({length:26},(_,i)=>{const x=(i*97)%400, y=(i*53)%120+8; return `<circle cx="${x}" cy="${y}" r="${(i%3)*.4+.5}" fill="var(--moon)" opacity=".${3+(i%5)}"/>`;}).join('');
+  // tree: trunk + 3 limbs + branches
+  const limbs={body:{x1:200,y1:230,x2:120,y2:170,dir:-1},mind:{x1:200,y1:230,x2:280,y2:170,dir:1},heart:{x1:200,y1:230,x2:200,y2:150,dir:0}};
+  let tree=`<path d="M190,300 L192,235 Q200,225 208,235 L210,300Z" fill="var(--bark)"/>`;
+  for(const [a,l] of Object.entries(limbs)){ tree+=`<path d="M${l.x1},${l.y1} Q${(l.x1+l.x2)/2},${l.y1-20} ${l.x2},${l.y2}" stroke="var(--bark)" stroke-width="9" fill="none" stroke-linecap="round"/>`; }
+  const byAttr={body:[],mind:[],heart:[]}; DOMAINS.forEach(d=>byAttr[d.attr].push(d));
+  for(const [a,ds] of Object.entries(byAttr)){ const l=limbs[a];
+    ds.forEach((d,i)=>{ const lv=L(d.id), f=freshness(d.id); const len=14+lv*4; const ang=l.dir===0?(-70+i*140):(l.dir<0?(-110-i*22):(-70+i*22));
+      const bx=l.x2+(l.dir===0?(i?18:-18):l.dir*(i*10)), by=l.y2-8-i*14; const ex=bx+len*Math.cos(ang*Math.PI/180), ey=by+len*Math.sin(ang*Math.PI/180);
+      tree+=`<line x1="${bx}" y1="${by}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="var(--bark)" stroke-width="${2+lv*.3}" stroke-linecap="round"/>`;
+      const leaves=Math.round((2+lv)*f); for(let j=0;j<leaves;j++){ const q=(j+1)/(leaves+1); const lx=bx+(ex-bx)*q+((j%2)?4:-4), ly=by+(ey-by)*q-3; tree+=`<circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="${2.2+lv*.15}" fill="var(--${d.attr})" opacity=".8"/>`; }
+    });
+  }
+  // companions
+  const fr=L('friends'), pr=L('partner'); let birds='';
+  for(let i=0;i<Math.min(3,Math.floor(fr/2));i++) birds+=`<path d="M${60+i*28},${205-i*10} q5,-6 10,0 q5,-6 10,0" stroke="var(--moon-dim)" stroke-width="1.5" fill="none"/>`;
+  if(pr>=3) birds+=`<g transform="translate(232,138) scale(.45)"><ellipse rx="14" ry="20" fill="#7a5a48"/><circle cx="-4" cy="-8" r="2" fill="var(--moon)"/><circle cx="4" cy="-8" r="2" fill="var(--moon)"/></g>`;
+  // owl parameters
+  const scale=.8+Math.min(.5,total*.012), wing=1+Math.min(.5,L('tennis')*.06), chest=1+Math.min(.35,L('gym')*.05);
+  const glowHi=Math.min(.9,L('chess')*.08), swivelAmp=4+Math.min(24,L('mobility')*3), blinkDur=3+Math.min(9,L('mind')*.9), swivelDur=Math.max(5,12-L('mind')*.5);
+  const plumage=Math.min(14,L('creole')+L('piano')+L('mind'));
+  const talons=L('jj')>=3?'M88,116 l-4,7 M92,116 l0,8 M96,116 l4,7 M104,116 l-4,7 M108,116 l0,8 M112,116 l4,7':'M90,116 l0,5 M100,116 l0,5 M110,116 l0,5';
+  const owl=`<g class="owl" transform="translate(200,150) scale(${scale.toFixed(2)}) translate(-100,-90)" style="--glow-hi:${glowHi};--glow-lo:${(glowHi*.3).toFixed(2)};--swivel-amp:${swivelAmp}deg;--swivel-dur:${swivelDur}s;--blink-dur:${blinkDur}s">
+    <ellipse cx="${(100-16*wing).toFixed(1)}" cy="96" rx="${(9*wing).toFixed(1)}" ry="26" fill="#6a4a36" transform="rotate(8 ${(100-16*wing).toFixed(1)} 96)"/>
+    <ellipse cx="${(100+16*wing).toFixed(1)}" cy="96" rx="${(9*wing).toFixed(1)}" ry="26" fill="#6a4a36" transform="rotate(-8 ${(100+16*wing).toFixed(1)} 96)"/>
+    <ellipse cx="100" cy="96" rx="${(22*chest).toFixed(1)}" ry="30" fill="#8b6a52"/>
+    <ellipse cx="100" cy="100" rx="${(15*chest).toFixed(1)}" ry="22" fill="#d9c7a8"/>
+    ${Array.from({length:plumage},(_,i)=>`<path d="M${88+(i%5)*6},${88+Math.floor(i/5)*9} q3,4 6,0" stroke="#a88f70" stroke-width="1.2" fill="none"/>`).join('')}
+    <path d="${talons}" stroke="#3a2a1e" stroke-width="2" stroke-linecap="round"/>
+    <g class="head">
+      <path d="M72,60 q-4,-16 8,-14 L120,46 q12,-2 8,14 q6,14 -28,20 q-34,-6 -28,-20Z" fill="#8b6a52"/>
+      <circle cx="86" cy="70" r="11" fill="#e9dcc0"/><circle cx="114" cy="70" r="11" fill="#e9dcc0"/>
+      <circle class="glow" cx="86" cy="70" r="13" fill="#b6c6ff"/><circle class="glow" cx="114" cy="70" r="13" fill="#b6c6ff"/>
+      <circle cx="86" cy="70" r="5.5" fill="#1a1410"/><circle cx="114" cy="70" r="5.5" fill="#1a1410"/>
+      <circle cx="88" cy="68" r="1.6" fill="#fff"/><circle cx="116" cy="68" r="1.6" fill="#fff"/>
+      <rect class="lid" x="74" y="59" width="24" height="22" rx="11" fill="#8b6a52"/><rect class="lid" x="102" y="59" width="24" height="22" rx="11" fill="#8b6a52"/>
+      <path d="M96,76 l4,7 l4,-7Z" fill="#c98a3a"/>
+    </g>
+    <path d="M78,125 h44" stroke="var(--bark)" stroke-width="4" stroke-linecap="round"/>
+  </g>`;
+  $('#scene').innerHTML=stars+moon+tree+birds+owl;
+}
+
+// ---------- dialogs ----------
+const logDlg=$('#logDlg'), msDlg=$('#msDlg'), focusDlg=$('#focusDlg');
+function openLog(pre){
+  const sel=$('#dDomain'); sel.innerHTML=DOMAINS.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+  if(pre) sel.value=pre; fillTypes(); $('#dDate').value=today(); $('#dNote').value=''; logDlg.showModal();
+}
+function fillTypes(){ const d=dom($('#dDomain').value); $('#dType').innerHTML=d.types.map(t=>`<option value="${t.id}">${t.label}${t.flat!=null?` (+${t.flat})`:''}</option>`).join(''); toggleMin(); }
+function toggleMin(){ const t=dom($('#dDomain').value).types.find(x=>x.id===$('#dType').value); $('#minWrap').style.display=t.flat!=null?'none':'block'; }
+$('#dDomain').onchange=fillTypes; $('#dType').onchange=toggleMin;
+$('#dCancel').onclick=()=>logDlg.close();
+$('#dSave').onclick=()=>{
+  const domainId=$('#dDomain').value, typeId=$('#dType').value, minutes=Math.max(1,+$('#dMin').value||0), date=$('#dDate').value||today(), note=$('#dNote').value.trim();
+  const up=addSession({domainId,typeId,minutes,date,note}); logDlg.close(); render();
+  if(up){ const el=$('#dom-'+domainId); el.classList.add('pulse'); setTimeout(()=>el.classList.remove('pulse'),1000); toast(`${dom(domainId).name} reached level ${level(S.domains[domainId].xp)}`); }
+  else toast('Logged.');
+};
+let msBoss=null;
+function openMilestone(bossId){ msBoss=BOSSES.find(b=>b.id===bossId); $('#msTitle').textContent=msBoss.title; $('#msLabel').textContent=msBoss.milestoneLabel; $('#msVal').value=''; $('#msNote').value=''; msDlg.showModal(); }
+$('#msCancel').onclick=()=>msDlg.close();
+$('#msSave').onclick=()=>{
+  const v=parseFloat($('#msVal').value); if(isNaN(v)) return toast('Enter the number.');
+  const st=S.bosses[msBoss.id]; const note=$('#msNote').value.trim();
+  S.domains[msBoss.domain].milestones.push({date:today(),label:`${msBoss.milestoneLabel} ${v}`,note});
+  if(msBoss.check(v)){ st.slain=today(); toast(`${msBoss.title} slain.`); } else toast(`Recorded. Not there yet — the boss keeps ${msBoss.better==='lower'?'standing until you get under':'standing until you reach'} the mark.`);
+  save(); msDlg.close(); render();
+};
+$('#editFocus').onclick=()=>{ const opts=DOMAINS.map(d=>`<option value="${d.id}">${d.name}</option>`).join(''); $('#f1').innerHTML=opts; $('#f2').innerHTML=opts; $('#f1').value=S.season.focus[0]; $('#f2').value=S.season.focus[1]; focusDlg.showModal(); };
+$('#fCancel').onclick=()=>focusDlg.close();
+$('#fSave').onclick=()=>{ const a=$('#f1').value,b=$('#f2').value; if(a===b) return toast('Pick two different branches.'); S.season.focus=[a,b]; save(); focusDlg.close(); render(); };
+$('#fab').onclick=()=>openLog();
+
+// ---------- chess.com ----------
+async function syncChess(){
+  const note=$('#syncNote'); note.textContent='Syncing…';
+  try{
+    const stats=await (await fetch(`https://api.chess.com/pub/player/${CHESS_USER}/stats`)).json();
+    S.chess.rapid=stats?.chess_rapid?.last?.rating ?? S.chess.rapid;
+    const since=S.chess.lastSync? new Date(S.chess.lastSync).getTime()/1000 : new Date(S.season.start).getTime()/1000;
+    const now=new Date(); const months=[[now.getFullYear(),now.getMonth()+1]]; const prev=new Date(now.getFullYear(),now.getMonth()-1,1); months.push([prev.getFullYear(),prev.getMonth()+1]);
+    let added=0;
+    for(const [y,m] of months){
+      const res=await fetch(`https://api.chess.com/pub/player/${CHESS_USER}/games/${y}/${String(m).padStart(2,'0')}`); if(!res.ok) continue;
+      const {games=[]}=await res.json();
+      for(const g of games){
+        if(g.end_time<since || S.chess.seen.includes(g.url)) continue;
+        const cls=g.time_class; const base=parseInt(g.time_control)||600; const inc=parseInt((g.time_control.split('+')[1])||0);
+        const minutes=Math.max(1,Math.round((base+inc*40)*2/60));
+        const typeId=(cls==='rapid'||cls==='daily'||cls==='classical')?'rapid':'blitz';
+        const date=new Date(g.end_time*1000).toISOString().slice(0,10);
+        addSession({domainId:'chess',typeId,minutes,date,note:'',ext:{url:g.url,cls}}); S.chess.seen.push(g.url); added++;
+      }
+    }
+    S.chess.seen=S.chess.seen.slice(-500); S.chess.lastSync=new Date().toISOString(); save(); render();
+    note.textContent=`Rapid ${S.chess.rapid??'—'}. ${added} game${added===1?'':'s'} pulled.`;
+    const rb=S.bosses.r1300; if(!rb.slain&&S.chess.rapid>=1300){ rb.slain=today(); S.domains.chess.milestones.push({date:today(),label:`Rapid rating ${S.chess.rapid}`,note:'Pulled from chess.com'}); save(); render(); toast('Rapid 1300 slain.'); }
+  }catch(e){ note.textContent='Could not reach chess.com. Check the connection and try again.'; }
+}
+$('#syncChess').onclick=syncChess;
+
+// ---------- export / import ----------
+$('#export').onclick=()=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'})); a.download=`perch-${today()}.json`; a.click(); };
+$('#import').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ const j=JSON.parse(r.result); if(!j.domains||!j.sessions) throw 0; S=j; save(); render(); toast('Imported.'); }catch{ toast('That file is not a Perch export.'); } }; r.readAsText(f); };
+
+// ---------- misc ----------
+let tt; function toast(m){ const el=$('#toast'); el.textContent=m; el.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('on'),2400); }
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+load(); applyDecay(); render();
+</script>
+</body>
+</html>
