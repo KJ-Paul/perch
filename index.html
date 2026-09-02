@@ -81,9 +81,9 @@ dialog .actions button.primary{background:var(--rust);border-color:var(--rust);c
 .toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--moon);color:var(--night);padding:8px 16px;border-radius:8px;font-size:.95rem;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.on{opacity:1}
 /* owl animations */
-.owl .head{transform-origin:100px 78px;animation:swivel var(--swivel-dur,9s) ease-in-out infinite}
+.owl .head{transform-box:fill-box;transform-origin:50% 62%;animation:swivel var(--swivel-dur,9s) ease-in-out infinite}
 @keyframes swivel{0%,100%{transform:rotate(0)}30%{transform:rotate(var(--swivel-amp,4deg))}70%{transform:rotate(calc(var(--swivel-amp,4deg)*-1))}}
-.owl .lid{transform-origin:center;animation:blink var(--blink-dur,4s) linear infinite}
+.owl .lid{transform-box:fill-box;transform-origin:50% 50%;animation:blink var(--blink-dur,4s) linear infinite}
 @keyframes blink{0%,94%,100%{transform:scaleY(0)}96%,98%{transform:scaleY(1)}}
 .owl .glow{animation:glow 3s ease-in-out infinite alternate}
 @keyframes glow{from{opacity:var(--glow-lo,0)}to{opacity:var(--glow-hi,0)}}
