@@ -28,7 +28,7 @@ h1,h2,h3{font-weight:400;margin:0}
 h2{font-size:1.15rem;margin:30px 0 10px;color:var(--moon)}
 .sky{position:relative;margin:0 -18px;background:radial-gradient(120% 80% at 50% 100%,#232a4a 0%,var(--night) 70%)}
 .sky svg{display:block;width:100%;height:auto}
-.season{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0 0;font-size:.95rem;color:var(--moon-dim)}
+.season{display:flex;flex-direction:column;gap:2px;padding:14px 0 0;font-size:.95rem;color:var(--moon-dim)}
 .season strong{color:var(--moon);font-weight:400}
 .attrs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px}
 .attr{padding:10px 12px;border-left:3px solid;background:var(--night-2);border-radius:0 8px 8px 0}
@@ -241,7 +241,7 @@ function render(){ renderSeason(); renderScene(); renderAttrs(); renderBosses();
 function renderSeason(){
   const t=today(), total=days(S.season.start,S.season.end), done=Math.max(0,Math.min(total,days(S.season.start,t)));
   const left=Math.max(0,total-done);
-  $('#seasonBar').innerHTML=`<span>Season 1 &nbsp;<strong>night ${done+1} of ${total}</strong></span><span>${left} nights to the full moon</span>`;
+  $('#seasonBar').innerHTML=`<span>Season 1, <strong>night ${done+1} of ${total}</strong></span><span>${left} nights to the full moon</span>`;
 }
 function renderAttrs(){
   $('#attrs').innerHTML=Object.entries(ATTRS).map(([k,n])=>`<div class="attr ${k}"><small>${n}</small><b>${attrLevel(k).toFixed(1)}</b></div>`).join('');
@@ -253,7 +253,7 @@ function renderBosses(){
     return `<div class="boss"><div class="row"><div>${b.title}</div><span>${st.slain?'Slain '+st.slain:hp.toFixed(0)+'% remaining'}</span></div>
       <div class="hp"><i style="width:${hp}%"></i></div>
       <div class="slay">${st.slain?'Done. A new boss arrives next season.':b.sub}</div>
-      ${st.slain?'':`<button class="win" data-boss="${b.id}">Log ${b.milestoneLabel.toLowerCase()}</button>`}</div>`;
+      ${st.slain?'':`<button class="win" data-boss="${b.id}">Log ${b.milestoneLabel.replace(/^New /,"new ")}</button>`}</div>`;
   }).join('');
   document.querySelectorAll('[data-boss]').forEach(btn=>btn.onclick=()=>openMilestone(btn.dataset.boss));
 }
@@ -294,28 +294,40 @@ function renderScene(){
   const r=22, k=1-2*seasonPct; // -1 full .. 1 new (start dark)
   const moon=`<g transform="translate(330,52)"><circle r="${r}" fill="#0f1224" stroke="#2a3050"/><path d="M0,-${r} A${r},${r} 0 1,1 0,${r} A${(r*Math.abs(k)).toFixed(1)},${r} 0 1,${k<0?1:0} 0,-${r}Z" fill="var(--moon)" opacity=".9"/></g>`;
   const stars=Array.from({length:26},(_,i)=>{const x=(i*97)%400, y=(i*53)%120+8; return `<circle cx="${x}" cy="${y}" r="${(i%3)*.4+.5}" fill="var(--moon)" opacity=".${3+(i%5)}"/>`;}).join('');
-  // tree: trunk + 3 limbs + branches
-  const limbs={body:{x1:200,y1:230,x2:120,y2:170,dir:-1},mind:{x1:200,y1:230,x2:280,y2:170,dir:1},heart:{x1:200,y1:230,x2:200,y2:150,dir:0}};
-  let tree=`<path d="M190,300 L192,235 Q200,225 208,235 L210,300Z" fill="var(--bark)"/>`;
-  for(const [a,l] of Object.entries(limbs)){ tree+=`<path d="M${l.x1},${l.y1} Q${(l.x1+l.x2)/2},${l.y1-20} ${l.x2},${l.y2}" stroke="var(--bark)" stroke-width="9" fill="none" stroke-linecap="round"/>`; }
+  // tree: trunk, two limbs (Body left, Mind right), Heart branches at the fork beside the owl
+  const qpt=(P,t)=>({x:(1-t)**2*P[0]+2*(1-t)*t*P[2]+t*t*P[4], y:(1-t)**2*P[1]+2*(1-t)*t*P[3]+t*t*P[5]});
+  const limbs={body:[200,218,150,205,88,110], mind:[200,218,250,205,312,110]};
+  let tree=`<path d="M188,300 L191,225 Q200,212 209,225 L212,300Z" fill="var(--bark)"/>`;
+  for(const P of Object.values(limbs)) tree+=`<path d="M${P[0]},${P[1]} Q${P[2]},${P[3]} ${P[4]},${P[5]}" stroke="var(--bark)" stroke-width="10" fill="none" stroke-linecap="round"/>`;
+  const rnd=seed=>{let x=seed*9301+49297;return ()=>{x=(x*9301+49297)%233280;return x/233280;};};
+  const cluster=(cx,cy,lv,f,attr,seed)=>{ const g=rnd(seed); const n=Math.max(2,Math.round((3+lv*2)*Math.max(f,.25))); const R=6+lv*1.1; let o='';
+    for(let j=0;j<n;j++){ const a=g()*Math.PI*2, r=Math.sqrt(g())*R; o+=`<circle cx="${(cx+Math.cos(a)*r).toFixed(1)}" cy="${(cy+Math.sin(a)*r*.8).toFixed(1)}" r="${(2.4+g()*2+lv*.12).toFixed(1)}" fill="var(--${attr})" opacity="${(.45+.45*f).toFixed(2)}"/>`; }
+    return o; };
   const byAttr={body:[],mind:[],heart:[]}; DOMAINS.forEach(d=>byAttr[d.attr].push(d));
-  for(const [a,ds] of Object.entries(byAttr)){ const l=limbs[a];
-    ds.forEach((d,i)=>{ const lv=L(d.id), f=freshness(d.id); const len=14+lv*4; const ang=l.dir===0?(-70+i*140):(l.dir<0?(-110-i*22):(-70+i*22));
-      const bx=l.x2+(l.dir===0?(i?18:-18):l.dir*(i*10)), by=l.y2-8-i*14; const ex=bx+len*Math.cos(ang*Math.PI/180), ey=by+len*Math.sin(ang*Math.PI/180);
-      tree+=`<line x1="${bx}" y1="${by}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="var(--bark)" stroke-width="${2+lv*.3}" stroke-linecap="round"/>`;
-      const leaves=Math.round((2+lv)*f); for(let j=0;j<leaves;j++){ const q=(j+1)/(leaves+1); const lx=bx+(ex-bx)*q+((j%2)?4:-4), ly=by+(ey-by)*q-3; tree+=`<circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="${2.2+lv*.15}" fill="var(--${d.attr})" opacity=".8"/>`; }
-    });
+  let leaves='';
+  for(const [a,P] of Object.entries(limbs)){ const ds=byAttr[a], dir=a==='body'?-1:1;
+    ds.forEach((d,i)=>{ const lv=L(d.id), f=freshness(d.id); const t=.38+i*.19; const p=qpt(P,t);
+      const ang=(dir<0?-115:-65)+(i%2?dir*28:0); const len=22+lv*5;
+      const ex=p.x+len*Math.cos(ang*Math.PI/180), ey=p.y+len*Math.sin(ang*Math.PI/180);
+      const mx=(p.x+ex)/2+dir*6, my=(p.y+ey)/2;
+      tree+=`<path d="M${p.x.toFixed(1)},${p.y.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}" stroke="var(--bark)" stroke-width="${(3+lv*.35).toFixed(1)}" fill="none" stroke-linecap="round"/>`;
+      leaves+=cluster(ex,ey,lv,f,a,i+1+(dir>0?10:0)); });
   }
+  byAttr.heart.forEach((d,i)=>{ const lv=L(d.id), f=freshness(d.id); const dir=i?1:-1; const len=20+lv*5; const ang=dir<0?-152:-28;
+    const sx=200+dir*9, sy=252; const ex=sx+len*Math.cos(ang*Math.PI/180), ey=sy+len*Math.sin(ang*Math.PI/180);
+    tree+=`<path d="M${sx},${sy} Q${(sx+ex)/2+dir*5},${(sy+ey)/2} ${ex.toFixed(1)},${ey.toFixed(1)}" stroke="var(--bark)" stroke-width="${(3+lv*.35).toFixed(1)}" fill="none" stroke-linecap="round"/>`;
+    leaves+=cluster(ex,ey,lv,f,'heart',20+i); });
+  tree+=leaves;
   // companions
   const fr=L('friends'), pr=L('partner'); let birds='';
   for(let i=0;i<Math.min(3,Math.floor(fr/2));i++) birds+=`<path d="M${60+i*28},${205-i*10} q5,-6 10,0 q5,-6 10,0" stroke="var(--moon-dim)" stroke-width="1.5" fill="none"/>`;
-  if(pr>=3) birds+=`<g transform="translate(232,138) scale(.45)"><ellipse rx="14" ry="20" fill="#7a5a48"/><circle cx="-4" cy="-8" r="2" fill="var(--moon)"/><circle cx="4" cy="-8" r="2" fill="var(--moon)"/></g>`;
+  if(pr>=3) birds+=`<g transform="translate(238,160) scale(.45)"><ellipse rx="14" ry="20" fill="#7a5a48"/><circle cx="-4" cy="-8" r="2" fill="var(--moon)"/><circle cx="4" cy="-8" r="2" fill="var(--moon)"/></g>`;
   // owl parameters
   const scale=.8+Math.min(.5,total*.012), wing=1+Math.min(.5,L('tennis')*.06), chest=1+Math.min(.35,L('gym')*.05);
   const glowHi=Math.min(.9,L('chess')*.08), swivelAmp=4+Math.min(24,L('mobility')*3), blinkDur=3+Math.min(9,L('mind')*.9), swivelDur=Math.max(5,12-L('mind')*.5);
   const plumage=Math.min(14,L('creole')+L('piano')+L('mind'));
   const talons=L('jj')>=3?'M88,116 l-4,7 M92,116 l0,8 M96,116 l4,7 M104,116 l-4,7 M108,116 l0,8 M112,116 l4,7':'M90,116 l0,5 M100,116 l0,5 M110,116 l0,5';
-  const owl=`<g class="owl" transform="translate(200,150) scale(${scale.toFixed(2)}) translate(-100,-90)" style="--glow-hi:${glowHi};--glow-lo:${(glowHi*.3).toFixed(2)};--swivel-amp:${swivelAmp}deg;--swivel-dur:${swivelDur}s;--blink-dur:${blinkDur}s">
+  const owl=`<g class="owl" transform="translate(200,172) scale(${scale.toFixed(2)}) translate(-100,-90)" style="--glow-hi:${glowHi};--glow-lo:${(glowHi*.3).toFixed(2)};--swivel-amp:${swivelAmp}deg;--swivel-dur:${swivelDur}s;--blink-dur:${blinkDur}s">
     <ellipse cx="${(100-16*wing).toFixed(1)}" cy="96" rx="${(9*wing).toFixed(1)}" ry="26" fill="#6a4a36" transform="rotate(8 ${(100-16*wing).toFixed(1)} 96)"/>
     <ellipse cx="${(100+16*wing).toFixed(1)}" cy="96" rx="${(9*wing).toFixed(1)}" ry="26" fill="#6a4a36" transform="rotate(-8 ${(100+16*wing).toFixed(1)} 96)"/>
     <ellipse cx="100" cy="96" rx="${(22*chest).toFixed(1)}" ry="30" fill="#8b6a52"/>
