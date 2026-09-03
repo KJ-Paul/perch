@@ -87,12 +87,60 @@ dialog .actions button.primary{background:var(--rust);border-color:var(--rust);c
 @keyframes blink{0%,94%,100%{transform:scaleY(0)}96%,98%{transform:scaleY(1)}}
 .owl .glow{animation:glow 3s ease-in-out infinite alternate}
 @keyframes glow{from{opacity:var(--glow-lo,0)}to{opacity:var(--glow-hi,0)}}
-@media (prefers-reduced-motion:reduce){.owl *{animation:none!important}.dom.pulse .lvl{animation:none}}
+/* owl poses */
+.caption{margin:8px 0 0;font-size:.95rem;color:var(--moon-dim);min-height:1.4em}
+.pose{transform-box:fill-box;transform-origin:50% 50%;cursor:pointer}
+.owl .wing{transform-box:fill-box;transform-origin:50% 12%}
+.owl .beak{transform-box:fill-box;transform-origin:50% 0}
+.owl .note{opacity:0}
+.pose.dozing .lid{animation:none;transform:scaleY(1)}
+.pose.dozing .head{animation:none}
+.pose.dozing{animation:breathe 4.5s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+.pose.alert .head{--swivel-dur:4.5s;--swivel-amp:14deg}
+.pose.hunting{animation:swoop 5.5s cubic-bezier(.45,0,.25,1) 1}
+@keyframes swoop{0%{transform:translate(0,0) rotate(0)}22%{transform:translate(-120px,-80px) rotate(-14deg)}50%{transform:translate(10px,-130px) rotate(0)}78%{transform:translate(125px,-60px) rotate(14deg)}100%{transform:translate(0,0) rotate(0)}}
+.pose.hunting .wing.l{animation:flapL .32s ease-in-out 16}
+.pose.hunting .wing.r{animation:flapR .32s ease-in-out 16}
+@keyframes flapL{0%,100%{transform:rotate(0)}50%{transform:rotate(38deg)}}
+@keyframes flapR{0%,100%{transform:rotate(0)}50%{transform:rotate(-38deg)}}
+.pose.preening .head{animation:preen 3.2s ease-in-out 1}
+@keyframes preen{0%,100%{transform:rotate(0)}35%,65%{transform:rotate(-42deg) translate(-4px,12px)}}
+.pose.preening .wing.l{animation:lift 3.2s ease-in-out 1}
+@keyframes lift{0%,100%{transform:rotate(0)}35%,65%{transform:rotate(22deg)}}
+.pose.calling .beak{animation:call .55s ease-in-out 5}
+@keyframes call{0%,100%{transform:scaleY(1)}50%{transform:scaleY(2.1)}}
+.pose.calling .note{animation:noteUp 2.8s ease-out 1 forwards}
+.pose.calling .note.n2{animation-delay:.9s}
+@keyframes noteUp{0%{opacity:0;transform:translate(0,0)}15%{opacity:1}100%{opacity:0;transform:translate(14px,-46px)}}
+.pose.restless{animation:jitter .55s linear infinite}
+@keyframes jitter{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,-1px)}50%{transform:translate(-1.2px,1px)}75%{transform:translate(1px,1.2px)}}
+.pose.restless .head{--swivel-dur:1.6s;--swivel-amp:22deg}
+.pose.restless .lid{--blink-dur:1.2s}
+/* night race */
+.race{position:fixed;inset:0;background:rgba(9,11,22,.94);display:grid;place-items:center;z-index:20;padding:20px}
+.race .box{width:min(94vw,520px)}
+.race svg{width:100%;height:auto;display:block;background:radial-gradient(120% 90% at 50% 110%,#232a4a,var(--night));border-radius:12px}
+.race h3{font-size:1.3rem;margin:0 0 8px}
+.race .result{margin-top:12px;font-size:1.05rem;min-height:1.6em}
+.race button{margin-top:14px;padding:10px 18px;border:1px solid var(--slate);border-radius:8px}
+.race .lane .bird{animation:fly var(--dur) cubic-bezier(.25,.1,.65,.95) forwards}
+@keyframes fly{from{transform:translateX(0)}to{transform:translateX(296px)}}
+.race .w1{animation:wflap .3s steps(1) infinite}
+.race .w2{animation:wflap .3s steps(1) infinite;animation-delay:.15s}
+@keyframes wflap{0%{opacity:1}50%{opacity:0}}
+.racehist{list-style:none;padding:0;margin:8px 0 0;font-size:.95rem}
+.racehist li{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #262c48;color:var(--moon-dim)}
+.racehist li b{font-weight:400;color:var(--moon)}
+.card .btns{display:flex;gap:8px;margin-top:10px}
+.card .btns button{padding:8px 12px;border:1px solid var(--slate);border-radius:8px}
+@media (prefers-reduced-motion:reduce){.owl *,.pose,.race .bird,.race .w1,.race .w2{animation:none!important}.dom.pulse .lvl{animation:none}}
 </style>
 </head>
 <body>
 <main>
   <div class="sky"><svg id="scene" viewBox="0 0 400 300" aria-label="Your owl in its tree"></svg></div>
+  <p class="caption" id="caption"></p>
   <div class="season" id="seasonBar"></div>
   <div class="attrs" id="attrs"></div>
 
@@ -101,6 +149,9 @@ dialog .actions button.primary{background:var(--rust);border-color:var(--rust);c
 
   <h2>Branches</h2>
   <ul class="domains" id="domains"></ul>
+
+  <h2>Night race</h2>
+  <div class="card" id="race"></div>
 
   <h2>Last seven nights</h2>
   <div class="card" id="week"></div>
@@ -183,10 +234,10 @@ const days = (a,b) => Math.round((new Date(b)-new Date(a))/864e5);
 const fresh = () => ({
   domains: Object.fromEntries(DOMAINS.map(d=>[d.id,{xp:0,lastActive:null,lastDecay:null,milestones:[]}])),
   sessions:[], season:{...SEASON}, bosses:Object.fromEntries(BOSSES.map(b=>[b.id,{drained:0,slain:null}])),
-  chess:{lastSync:null,rapid:null,seen:[]},
+  chess:{lastSync:null,rapid:null,seen:[]}, races:[],
 });
 let S;
-function load(){ try{ S = JSON.parse(localStorage.getItem(KEY)) || fresh(); }catch{ S = fresh(); } }
+function load(){ try{ S = JSON.parse(localStorage.getItem(KEY)) || fresh(); }catch{ S = fresh(); } S.races ||= []; }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch{ toast('Could not save. Storage may be full or blocked.'); } }
 
 // ---------- levels ----------
@@ -236,7 +287,7 @@ function applyDecay(){
 
 // ---------- render ----------
 const $=s=>document.querySelector(s);
-function render(){ renderSeason(); renderScene(); renderAttrs(); renderBosses(); renderDomains(); renderWeek(); renderJournal(); }
+function render(){ renderSeason(); renderScene(); renderAttrs(); renderBosses(); renderDomains(); renderRace(); renderWeek(); renderJournal(); }
 
 function renderSeason(){
   const t=today(), total=days(S.season.start,S.season.end), done=Math.max(0,Math.min(total,days(S.season.start,t)));
@@ -323,13 +374,15 @@ function renderScene(){
   for(let i=0;i<Math.min(3,Math.floor(fr/2));i++) birds+=`<path d="M${60+i*28},${205-i*10} q5,-6 10,0 q5,-6 10,0" stroke="var(--moon-dim)" stroke-width="1.5" fill="none"/>`;
   if(pr>=3) birds+=`<g transform="translate(238,160) scale(.45)"><ellipse rx="14" ry="20" fill="#7a5a48"/><circle cx="-4" cy="-8" r="2" fill="var(--moon)"/><circle cx="4" cy="-8" r="2" fill="var(--moon)"/></g>`;
   // owl parameters
-  const scale=.8+Math.min(.5,total*.012), wing=1+Math.min(.5,L('tennis')*.06), chest=1+Math.min(.35,L('gym')*.05);
+  const scale=.8+Math.min(.5,total*.012), wing=1+Math.min(.7,L('tennis')*.09), chest=1+Math.min(.45,L('gym')*.07);
   const glowHi=Math.min(.9,L('chess')*.08), swivelAmp=4+Math.min(24,L('mobility')*3), blinkDur=3+Math.min(9,L('mind')*.9), swivelDur=Math.max(5,12-L('mind')*.5);
   const plumage=Math.min(14,L('creole')+L('piano')+L('mind'));
   const talons=L('jj')>=3?'M88,116 l-4,7 M92,116 l0,8 M96,116 l4,7 M104,116 l-4,7 M108,116 l0,8 M112,116 l4,7':'M90,116 l0,5 M100,116 l0,5 M110,116 l0,5';
-  const owl=`<g class="owl" transform="translate(200,172) scale(${scale.toFixed(2)}) translate(-100,-90)" style="--glow-hi:${glowHi};--glow-lo:${(glowHi*.3).toFixed(2)};--swivel-amp:${swivelAmp}deg;--swivel-dur:${swivelDur}s;--blink-dur:${blinkDur}s">
-    <ellipse cx="${(100-16*wing).toFixed(1)}" cy="96" rx="${(9*wing).toFixed(1)}" ry="26" fill="#6a4a36" transform="rotate(8 ${(100-16*wing).toFixed(1)} 96)"/>
-    <ellipse cx="${(100+16*wing).toFixed(1)}" cy="96" rx="${(9*wing).toFixed(1)}" ry="26" fill="#6a4a36" transform="rotate(-8 ${(100+16*wing).toFixed(1)} 96)"/>
+  const [state,caption]=owlState();
+  const companyBirds = state==='company' ? `<g transform="translate(118,146) scale(.5)"><ellipse rx="12" ry="16" fill="#6f5a4c"/><circle cx="-3" cy="-6" r="1.8" fill="var(--moon)"/><circle cx="3" cy="-6" r="1.8" fill="var(--moon)"/></g><g transform="translate(286,146) scale(.5)"><ellipse rx="12" ry="16" fill="#6f5a4c"/><circle cx="-3" cy="-6" r="1.8" fill="var(--moon)"/><circle cx="3" cy="-6" r="1.8" fill="var(--moon)"/></g>` : '';
+  const owl=`<g class="pose ${state}"><g class="owl" transform="translate(200,172) scale(${scale.toFixed(2)}) translate(-100,-90)" style="--glow-hi:${glowHi};--glow-lo:${(glowHi*.3).toFixed(2)};--swivel-amp:${swivelAmp}deg;--swivel-dur:${swivelDur}s;--blink-dur:${blinkDur}s">
+    <ellipse class="wing l" cx="${(100-16*wing).toFixed(1)}" cy="96" rx="${(9*wing).toFixed(1)}" ry="${(26*wing).toFixed(1)}" fill="#6a4a36" transform="rotate(8 ${(100-16*wing).toFixed(1)} 96)"/>
+    <ellipse class="wing r" cx="${(100+16*wing).toFixed(1)}" cy="96" rx="${(9*wing).toFixed(1)}" ry="${(26*wing).toFixed(1)}" fill="#6a4a36" transform="rotate(-8 ${(100+16*wing).toFixed(1)} 96)"/>
     <ellipse cx="100" cy="96" rx="${(22*chest).toFixed(1)}" ry="30" fill="#8b6a52"/>
     <ellipse cx="100" cy="100" rx="${(15*chest).toFixed(1)}" ry="22" fill="#d9c7a8"/>
     ${Array.from({length:plumage},(_,i)=>`<path d="M${88+(i%5)*6},${88+Math.floor(i/5)*9} q3,4 6,0" stroke="#a88f70" stroke-width="1.2" fill="none"/>`).join('')}
@@ -341,11 +394,76 @@ function renderScene(){
       <circle cx="86" cy="70" r="5.5" fill="#1a1410"/><circle cx="114" cy="70" r="5.5" fill="#1a1410"/>
       <circle cx="88" cy="68" r="1.6" fill="#fff"/><circle cx="116" cy="68" r="1.6" fill="#fff"/>
       <rect class="lid" x="74" y="59" width="24" height="22" rx="11" fill="#8b6a52"/><rect class="lid" x="102" y="59" width="24" height="22" rx="11" fill="#8b6a52"/>
-      <path d="M96,76 l4,7 l4,-7Z" fill="#c98a3a"/>
+      <path class="beak" d="M96,76 l4,7 l4,-7Z" fill="#c98a3a"/>
+      <g class="note" transform="translate(118,62)"><circle r="2.4" fill="var(--moon)"/><path d="M2.2,0 v-10 q6,1 6,4" stroke="var(--moon)" fill="none" stroke-width="1.4"/></g>
+      <g class="note n2" transform="translate(124,70)"><circle r="2" fill="var(--moon)"/><path d="M1.8,0 v-8 q5,1 5,3.5" stroke="var(--moon)" fill="none" stroke-width="1.2"/></g>
     </g>
     <path d="M78,125 h44" stroke="var(--bark)" stroke-width="4" stroke-linecap="round"/>
-  </g>`;
-  $('#scene').innerHTML=stars+moon+tree+birds+owl;
+  </g></g>`;
+  $('#caption').textContent=caption;
+  $('#scene').innerHTML=stars+moon+tree+birds+companyBirds+owl;
+}
+
+
+// ---------- owl state ----------
+const nameList=ids=>{const n=[...ids].map(i=>dom(i).name.toLowerCase()); return n.length>1? n.slice(0,-1).join(', ')+' and '+n.at(-1) : n[0];};
+function owlState(){
+  const t=today(); const td=S.sessions.filter(s=>s.date===t); const attrs=new Set(td.map(s=>dom(s.domain).attr)); const doms=new Set(td.map(s=>s.domain));
+  const last=S.sessions.reduce((m,s)=>s.date>m?s.date:m,''); const idle=last?days(last,t):null;
+  const dates=[...new Set(S.sessions.filter(s=>days(s.date,t)<14).map(s=>s.date))].sort(); let gap=0; for(let i=1;i<dates.length;i++) gap=Math.max(gap,days(dates[i-1],dates[i]));
+  const xpToday=td.reduce((a,s)=>a+s.xp,0);
+  if(gap>=5&&xpToday>150) return ['restless','A big night after a long gap. It will settle once the feeding is steady.'];
+  if(attrs.has('body')) return ['hunting',`Fed on ${nameList(doms)} tonight. It is hunting.`];
+  if(attrs.has('heart')) return ['company',`Company tonight. Fed on ${nameList(doms)}.`];
+  if(doms.has('piano')||doms.has('mind')) return ['calling',`Fed on ${nameList(doms)} tonight. Listen.`];
+  if(attrs.has('mind')) return ['preening',`Fed on ${nameList(doms)} tonight. Preening.`];
+  if(idle===1) return ['alert','Fed last night. Watching for more.'];
+  if(idle===null) return ['dozing','Waiting for its first meal.'];
+  return ['dozing',`Nothing in ${idle} nights. Dozing.`];
+}
+$('#scene').addEventListener('click',e=>{ const g=e.target.closest('.pose'); if(!g) return; const cls=g.getAttribute('class'); g.setAttribute('class','pose'); void g.getBoundingClientRect(); g.setAttribute('class',cls); });
+
+// ---------- night race ----------
+const RIVALS=[{name:'Ash',k:.85},{name:'Sable',k:1.0},{name:'Tarn',k:1.12}];
+const PLACE_XP=[40,25,15,5];
+const ordinal=n=>['First','Second','Third','Fourth'][n-1];
+function raceKey(d){ const x=new Date(d+'T12:00:00'); x.setDate(x.getDate()-x.getDay()); return x.toISOString().slice(0,10); } // this week's Sunday
+function seedRnd(str){ let h=2166136261; for(const c of str){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return ()=>{ h=Math.imul(h^(h>>>15),2246822507); h=Math.imul(h^(h>>>13),3266489909); return ((h^=h>>>16)>>>0)/4294967296; }; }
+function bodyXp7(){ const t=today(); return S.sessions.filter(s=>dom(s.domain).attr==='body'&&days(s.date,t)<7).reduce((a,s)=>a+s.xp,0); }
+function computeRace(key){
+  const g=seedRnd(key+CHESS_USER); const B=attrLevel('body'); const form=Math.max(-.25,Math.min(.25,(bodyXp7()-150)/600));
+  const you={name:'You',speed:B*(1+form)}; const rivals=RIVALS.map(r=>({name:r.name,speed:B*r.k*(1+(g()-.5)*.22)}));
+  const order=[you,...rivals].slice().sort((a,b)=>b.speed-a.speed); const place=order.findIndex(x=>x.name==='You')+1;
+  return {key,place,form:+form.toFixed(2),body:+B.toFixed(2),entrants:[you,...rivals].map(e=>({name:e.name,speed:+e.speed.toFixed(3)}))};
+}
+function racePending(){ const key=raceKey(today()); return key>=S.season.start && !S.races.some(r=>r.key===key); }
+function runRace(){
+  const res=computeRace(raceKey(today())); S.races.push(res);
+  const bonus=PLACE_XP[res.place-1]; DOMAINS.filter(d=>d.attr==='body').forEach(d=>{ S.domains[d.id].xp+=bonus; });
+  save(); showRace(res,bonus); render();
+}
+function showRace(res,bonus){
+  const max=Math.max(...res.entrants.map(e=>e.speed)); const base=7;
+  const lanes=res.entrants.map((e,i)=>{ const y=42+i*40, dur=(base*max/e.speed).toFixed(2);
+    const bird = e.name==='You'
+      ? `<g class="bird" style="--dur:${dur}s"><g transform="translate(0,${y}) scale(.9)"><ellipse rx="10" ry="7" fill="#8b6a52"/><ellipse cx="-2" rx="6" ry="4" fill="#d9c7a8"/><circle cx="6" cy="-3" r="3.2" fill="#e9dcc0"/><circle cx="6.5" cy="-3" r="1.5" fill="#1a1410"/><path class="w1" d="M-4,-2 q-8,-12 -16,-4" stroke="#6a4a36" stroke-width="3" fill="none" stroke-linecap="round"/><path class="w2" d="M-4,-1 q-8,8 -16,4" stroke="#6a4a36" stroke-width="3" fill="none" stroke-linecap="round"/></g></g>`
+      : `<g class="bird" style="--dur:${dur}s"><g transform="translate(0,${y})"><ellipse rx="8" ry="4.5" fill="var(--moon-dim)"/><circle cx="7" cy="-1.5" r="2.5" fill="var(--moon-dim)"/><path class="w1" d="M-2,-2 q-6,-10 -14,-4" stroke="var(--moon-dim)" stroke-width="2.4" fill="none" stroke-linecap="round"/><path class="w2" d="M-2,0 q-6,8 -14,4" stroke="var(--moon-dim)" stroke-width="2.4" fill="none" stroke-linecap="round"/></g></g>`;
+    return `<g class="lane"><text x="8" y="${y+4}" font-size="9" fill="var(--moon-dim)" font-family="inherit">${e.name}</text><line x1="40" y1="${y}" x2="380" y2="${y}" stroke="#262c48" stroke-dasharray="2 4"/><g transform="translate(46,0)">${bird}</g></g>`; }).join('');
+  const stars=Array.from({length:18},(_,i)=>`<circle cx="${(i*83)%400}" cy="${(i*37)%200}" r="${(i%3)*.4+.4}" fill="var(--moon)" opacity=".${3+(i%4)}"/>`).join('');
+  const el=document.createElement('div'); el.className='race';
+  el.innerHTML=`<div class="box"><h3>Night race, ${res.key}</h3><svg viewBox="0 0 400 200">${stars}<line x1="352" y1="20" x2="352" y2="185" stroke="var(--moon)" stroke-dasharray="4 3" opacity=".7"/>${lanes}</svg><div class="result"></div><button>Close</button></div>`;
+  document.body.appendChild(el); el.querySelector('button').onclick=()=>el.remove();
+  const longest=base*max/Math.min(...res.entrants.map(e=>e.speed));
+  setTimeout(()=>{ el.querySelector('.result').textContent = `${ordinal(res.place)} of four.` + (bonus!=null?` +${bonus} XP to every Body branch.`:' Replay, no XP.') + (res.form>0.1?' Strong form this week.':res.form<-0.1?' Light week; the rivals could tell.':''); }, Math.min(longest,12)*1000+400);
+}
+function renderRace(){
+  const last=S.races.at(-1); const pending=racePending();
+  const hist=S.races.slice(-6).reverse().map(r=>`<li><span>${r.key}</span><b>${ordinal(r.place)}</b></li>`).join('');
+  $('#race').innerHTML=`<p class="note" style="margin:0">Every Sunday the owl races three rivals across the sky. Body sets its speed; this week's feeding sets its form.</p>
+    ${last?`<ul class="racehist">${hist}</ul>`:''}
+    <div class="btns">${pending?`<button id="raceRun">Run this week's race</button>`:''}${last?`<button id="raceReplay">Watch last race</button>`:''}</div>`;
+  const r=$('#raceRun'); if(r) r.onclick=runRace;
+  const p=$('#raceReplay'); if(p) p.onclick=()=>showRace(last,null);
 }
 
 // ---------- dialogs ----------
@@ -416,6 +534,7 @@ let tt; function toast(m){ const el=$('#toast'); el.textContent=m; el.classList.
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 
 load(); applyDecay(); render();
+if(racePending()) setTimeout(runRace,900);
 </script>
 </body>
 </html>

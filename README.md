@@ -13,6 +13,12 @@ Everything lives in the browser's localStorage on that device. Use "Export data"
 ## Season 1
 Sept 1 – Nov 23, 2026. Focus: Tennis and Chess (2× XP). Bosses: WTN 26.5 and Rapid 1300.
 
+## Owl states
+On open the owl picks a state from your recent sessions: hunting (Body fed today), company (Heart), calling (Piano or Mindfulness), preening (other Mind), alert (fed yesterday), dozing (nothing in two nights), restless (big session after a 5+ day gap). Tap the owl to replay; the caption under the scene says why.
+
+## Night race
+Every Sunday the owl races three rivals. Speed comes from the Body attribute; form comes from Body XP in the last 7 days (about 150 XP keeps you even, more helps, less hurts). Rivals are seeded per week so a replay is identical. Podium XP goes to every Body branch: 40 / 25 / 15 / 5. The race runs automatically the first time you open the app on or after Sunday; missed weeks are not back-filled.
+
 ## Editing rules
 XP rates, bosses, season dates, and the chess.com username are all in the `configuration` block at the top of the script in `index.html`.
 To start season 2: change `SEASON`, replace the two entries in `BOSSES`, and reset `bosses` in the exported JSON (or leave slain ones — they just stay marked done).
